@@ -3,7 +3,7 @@
 
 This version of System Management Mode backdoor for UEFI based platforms was heavily inspired by [my previous project](http://blog.cr4.sh/2015/07/building-reliable-smm-backdoor-for-uefi.html) (check [its GitHub repository](https://github.com/Cr4sh/SmmBackdoor)) but introducing few key changes in order to make it more up to date:
 
- * New SMM backdoor can be deployed with pre-boot DMA attack using [PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze) (see [uefi_backdoor_simple.py](https://github.com/Cr4sh/s6_pcie_microblaze/blob/master/python/uefi_backdoor_simple.py) program usage for more details) and industry-wide EFI SMM Core [vulnerability exploitation](https://github.com/Cr4sh/SmmBackdoorNg/blob/main/src/exploit.c) to perform DXE to SMM execution transition.
+ * In addition to the usual firmware flash image infection method as described in the article, new SMM backdoor also can be deployed with pre-boot DMA attack using [PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze) (see [uefi_backdoor_simple.py](https://github.com/Cr4sh/s6_pcie_microblaze/blob/master/python/uefi_backdoor_simple.py) program usage for more details) and industry-wide EFI SMM Core [vulnerability exploitation](https://github.com/Cr4sh/SmmBackdoorNg/blob/main/src/exploit.c) to perform DXE to SMM execution transition.
 
  * Client program `smm_backdoor.py` supports Windows and Linux systems and can interact with SMM backdoor using SW SMI (requires high privileges and [chipsec](https://github.com/chipsec/chipsec) installed) or APIC periodic timer method that can work with any privileges level.
 
