@@ -21,6 +21,7 @@
 #define PAGE_OFFSET_2M(_addr_) ((_addr_) & 0x1fffff)
 #define PAGE_OFFSET_1G(_addr_) ((_addr_) & 0x3fffffff)
 
+
 // EPT present bit
 #define EPT_PRESENT(_val_) (((_val_) & 7) != 0)
 
@@ -29,6 +30,7 @@
 #define EPT_W(_val_) (((_val_) & 2) == 2)
 #define EPT_X(_val_) (((_val_) & 4) == 4)
 
+
 typedef struct _CONTROL_REGS
 {
     UINT64 Cr0, Cr3, Cr4;
@@ -36,14 +38,11 @@ typedef struct _CONTROL_REGS
 } CONTROL_REGS,
 *PCONTROL_REGS;
 
-BOOLEAN Check_IA_32e(PCONTROL_REGS ControlRegs);
 
+BOOLEAN Check_IA_32e(void);
 BOOLEAN VirtualAddrValid(UINT64 Addr, UINT64 Cr3);
-
 EFI_STATUS PhysicalToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Eptp, UINT64 SmmCr3);
-
 EFI_STATUS VirtualToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Cr3, UINT64 Eptp, UINT64 SmmCr3);
-
 BOOLEAN VirtualAddrRemap(UINT64 Addr, UINT64 NewAddr, UINT64 Cr3, BOOLEAN *pbLargePage);
 
 #endif

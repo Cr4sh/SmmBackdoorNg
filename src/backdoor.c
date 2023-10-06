@@ -436,10 +436,10 @@ UINT8 *SaveStateFindAddr(UINTN CpuIndex, EFI_SMM_CPU_PROTOCOL *SmmCpu, PCONTROL_
     // enumerate SMRAM regions
     for (i = 0; i < m_SmramMapSize; i += 1)
     {
-        // scan fo SMM saved state area
+        // scan for the SMM saved state area
         for (n = 0; n < m_SmramMap[i].PhysicalSize - SAVE_SATE_SIZE; n += SAVE_SATE_SIZE)
         {       
-            // ensue that SMRAM memory page is valid and mapped     
+            // ensure that SMRAM memory page is valid and mapped     
             if (VirtualAddrValid(m_SmramMap[i].PhysicalStart + n, Cr3))
             {
                 UINT8 *Ptr = (UINT8 *)(m_SmramMap[i].PhysicalStart + n);
@@ -466,8 +466,7 @@ EFI_STATUS SmmCtlHandle(
     UINTN CpuIndex, EFI_SMM_CPU_PROTOCOL *SmmCpu,
     UINT64 Code, UINT64 Args, PCONTROL_REGS ControlRegs)
 {
-    BACKDOOR_CTL Ctl;    
-
+    BACKDOOR_CTL Ctl;
     UINT64 ArgsAddr = 0, Eptp = 0;
     UINT8 *SaveStateAddr = NULL;
     BOOLEAN bLargePage = FALSE;
@@ -521,7 +520,7 @@ EFI_STATUS SmmCtlHandle(
 #endif // USE_PERIODIC_TIMER
 
     // check for the sane caller memory paging configuration
-    if (!Check_IA_32e(ControlRegs))
+    if (!Check_IA_32e())
     {
         DbgMsg(__FILE__, __LINE__, "ERROR: IA-32e paging is not enabled\r\n");
         return EFI_UNSUPPORTED;

@@ -163,7 +163,8 @@ EFI_STATUS PhysicalToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Eptp, UINT64 SmmC
     }
 
     DbgMsgMem(
-        __FILE__, __LINE__, "EPT PML4E is at 0x%llx[0x%llx]: 0x%llx\r\n", 
+        __FILE__, __LINE__, 
+        "EPT PML4E is at 0x%llx[0x%llx]: 0x%llx\r\n", 
         PML4_ADDRESS(Eptp), PML4_INDEX(Addr), PML4Entry.Uint64
     );
 
@@ -197,7 +198,8 @@ EFI_STATUS PhysicalToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Eptp, UINT64 SmmC
         }
 
         DbgMsgMem(
-            __FILE__, __LINE__, "EPT PDPTE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
+            __FILE__, __LINE__, 
+            "EPT PDPTE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
             PFN_TO_PAGE(PML4Entry.Bits.PageTableBaseAddress), PDPT_INDEX(Addr), PDPTEntry.Uint64
         );
 
@@ -234,9 +236,9 @@ EFI_STATUS PhysicalToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Eptp, UINT64 SmmC
                 }
 
                 DbgMsgMem(
-                    __FILE__, __LINE__, "EPT PDE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
-                    PFN_TO_PAGE(PDPTEntry.Bits.PageTableBaseAddress), PDE_INDEX(Addr), 
-                    PDEntry.Uint64
+                    __FILE__, __LINE__, 
+                    "EPT PDE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
+                    PFN_TO_PAGE(PDPTEntry.Bits.PageTableBaseAddress), PDE_INDEX(Addr), PDEntry.Uint64
                 );
 
                 if (EPT_PRESENT(PDEntry.Uint64))
@@ -272,9 +274,9 @@ EFI_STATUS PhysicalToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Eptp, UINT64 SmmC
                         }
 
                         DbgMsgMem(
-                            __FILE__, __LINE__, "EPT PTE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
-                            PFN_TO_PAGE(PDEntry.Bits.PageTableBaseAddress), PTE_INDEX(Addr), 
-                            PTEntry.Uint64
+                            __FILE__, __LINE__, 
+                            "EPT PTE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
+                            PFN_TO_PAGE(PDEntry.Bits.PageTableBaseAddress), PTE_INDEX(Addr), PTEntry.Uint64
                         );
 
                         if (EPT_PRESENT(PTEntry.Uint64))
@@ -391,7 +393,8 @@ EFI_STATUS VirtualToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Cr3, UINT64 Eptp, 
     }
 
     DbgMsgMem(
-        __FILE__, __LINE__, "PML4E is at 0x%llx[0x%llx]: 0x%llx\r\n", 
+        __FILE__, __LINE__, 
+        "PML4E is at 0x%llx[0x%llx]: 0x%llx\r\n", 
         PML4_ADDRESS(Cr3), PML4_INDEX(Addr), PML4Entry.Uint64
     );
 
@@ -434,7 +437,8 @@ EFI_STATUS VirtualToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Cr3, UINT64 Eptp, 
         }
 
         DbgMsgMem(
-            __FILE__, __LINE__, "PDPTE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
+            __FILE__, __LINE__, 
+            "PDPTE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
             PFN_TO_PAGE(PML4Entry.Bits.PageTableBaseAddress), PDPT_INDEX(Addr), PDPTEntry.Uint64
         );
 
@@ -480,9 +484,9 @@ EFI_STATUS VirtualToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Cr3, UINT64 Eptp, 
                 }
 
                 DbgMsgMem(
-                    __FILE__, __LINE__, "PDE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
-                    PFN_TO_PAGE(PDPTEntry.Bits.PageTableBaseAddress), PDE_INDEX(Addr), 
-                    PDEntry.Uint64
+                    __FILE__, __LINE__, 
+                    "PDE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
+                    PFN_TO_PAGE(PDPTEntry.Bits.PageTableBaseAddress), PDE_INDEX(Addr), PDEntry.Uint64
                 );
 
                 if (PDEntry.Bits.Present)
@@ -527,9 +531,9 @@ EFI_STATUS VirtualToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Cr3, UINT64 Eptp, 
                         }
 
                         DbgMsgMem(
-                            __FILE__, __LINE__, "PTE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
-                            PFN_TO_PAGE(PDEntry.Bits.PageTableBaseAddress), PTE_INDEX(Addr), 
-                            PTEntry.Uint64
+                            __FILE__, __LINE__, 
+                            "PTE is at 0x%llx[0x%llx]: 0x%llx\r\n", 
+                            PFN_TO_PAGE(PDEntry.Bits.PageTableBaseAddress), PTE_INDEX(Addr), PTEntry.Uint64
                         );
 
                         if (PTEntry.Bits.Present)
@@ -591,7 +595,7 @@ EFI_STATUS VirtualToPhysical(UINT64 Addr, UINT64 *Ret, UINT64 Cr3, UINT64 Eptp, 
                 return Status;
             }
         }
-        
+
         DbgMsg(__FILE__, __LINE__, "Physical address of 0x%llx is 0x%llx\r\n", Addr, PhysAddr);
 
         if (Ret)
@@ -652,16 +656,19 @@ BOOLEAN VirtualAddrValid(UINT64 Addr, UINT64 Cr3)
     return FALSE;
 }
 //--------------------------------------------------------------------------------------
-BOOLEAN Check_IA_32e(PCONTROL_REGS ControlRegs)
+BOOLEAN Check_IA_32e(void)
 {
+    UINT64 Cr0 = __readcr0();
     UINT64 Efer = __readmsr(IA32_EFER);
 
-    if (!(ControlRegs->Cr0 & CR0_PG))
+    // check for the paging enabled
+    if (!(Cr0 & CR0_PG))
     {
         DbgMsg(__FILE__, __LINE__, "ERROR: CR0.PG is not set\r\n");
         return FALSE;   
     }
 
+    // check for the 64-bit mode enabled
     if (!(Efer & IA32_EFER_LME))
     {
         DbgMsg(__FILE__, __LINE__, "ERROR: IA32_EFER.LME is not set\r\n");
