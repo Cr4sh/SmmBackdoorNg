@@ -7,7 +7,6 @@
     See src/debug.c for more details.
 */
 #define BACKDOOR_DEBUG
-#define BACKDOOR_DEBUG_MEM
 
 /*
     Write debug messages into the OVMF debug output port.
