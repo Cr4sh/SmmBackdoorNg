@@ -1458,7 +1458,7 @@ VOID BackdoorSmm(EFI_SMM_SYSTEM_TABLE2 *Smst)
     EFI_PHYSICAL_ADDRESS Addr = 0;     
     EFI_SMM_SW_DISPATCH2_PROTOCOL *SwDispatch = NULL;   
 
-#ifdef USE_PERIODIC_TIMER  
+#ifdef USE_PERIODIC_TIMER
 
     EFI_SMM_PERIODIC_TIMER_DISPATCH2_PROTOCOL *TimerDispatch = NULL;    
 
@@ -1470,14 +1470,6 @@ VOID BackdoorSmm(EFI_SMM_SYSTEM_TABLE2 *Smst)
 
     DbgMsg(__FILE__, __LINE__, "Running in SMM\r\n"); 
     DbgMsg(__FILE__, __LINE__, "SMM system table is at "FPTR"\r\n", Smst);            
-
-    if (m_SmramMapSize > 0)
-    {
-        /*
-            Use beginnig of the SMRAM as dummy page for VirtualAddrRemap()
-        */
-        m_DummyPage = m_SmramMap[0].PhysicalStart;
-    }
 
     // allocate temp buffer
     Status = m_Smst->SmmAllocatePages(
@@ -1690,7 +1682,15 @@ VOID BackdoorResidentCommon(VOID *Image)
                     m_SmramMap[i].PhysicalStart,
                     m_SmramMap[i].PhysicalStart + m_SmramMap[i].PhysicalSize - 1
                 );
-            }            
+            }
+
+            if (m_SmramMapSize > 0)
+            {
+                /*
+                    Use beginnig of the SMRAM as dummy page for VirtualAddrRemap()
+                */
+                m_DummyPage = m_SmramMap[0].PhysicalStart;
+            }
         }
         else
         {
