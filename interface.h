@@ -33,6 +33,7 @@
 #define BACKDOOR_CTL_GET_PHYS_ADDR  0x0b   // translate virtual address to physical
 #define BACKDOOR_CTL_TIMER_ENABLE   0x0c   // enable periodic timer software SMI
 #define BACKDOOR_CTL_TIMER_DISABLE  0x0d   // disable periodic timer software SMI
+#define BACKDOOR_CTL_FIND_VMCS      0x0e   // find potential VMCS region
 
 /* 
     Magic register values to communicate with the backdoor
@@ -114,6 +115,15 @@ typedef struct _BACKDOOR_CTL
             UINT64 Cr3;
 
         } PhysAddr;
+
+        // for BACKDOOR_CTL_FIND_VMCS
+        struct 
+        {
+            UINT64 Addr;
+            UINT64 Size;
+            UINT64 Found;
+
+        } FindVmcs;
 
     } Args;
 

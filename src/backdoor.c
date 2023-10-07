@@ -34,6 +34,9 @@
 #define APMC_DATA       0xb3
 #define APMC_COMMAND    0xb2
 
+// for VMCS revision ID
+#define IA32_VMX_BASIC  0x480
+
 typedef VOID (* BACKDOOR_ENTRY_SMM)(EFI_SMM_SYSTEM_TABLE2 *Smst);
 
 typedef VOID (* BACKDOOR_ENTRY_RESIDENT)(VOID *Image);
@@ -460,6 +463,26 @@ UINT8 *SaveStateFindAddr(UINTN CpuIndex, EFI_SMM_CPU_PROTOCOL *SmmCpu, PCONTROL_
 _end:
 
     return NULL;
+}
+//--------------------------------------------------------------------------------------
+// how many bytes of VMCS region to scan for known values
+#define VMCS_SEARCH_SIZE 0x400
+
+BOOLEAN VmcsSearchVal(UINT8 *Addr, UINT64 Size, UINT64 Value)
+{
+    UINT64 i = 0;
+
+    // scan specified memory region
+    for (i = 0; i < Size; i += sizeof(UINT64))
+    {
+        // check for desired value
+        if (*(UINT64 *)(Addr + i) == Value)
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 EFI_STATUS SmmCtlHandle(
@@ -1039,6 +1062,97 @@ EFI_STATUS SmmCtlHandle(
             else
             {
                 Ctl.Status = EFI_SUCCESS;
+            }
+
+            break;
+        }
+
+    case BACKDOOR_CTL_FIND_VMCS:
+        {
+            UINT64 GdtBase = 0, IdtBase = 0, i = 0;
+            UINT64 SearchAddr = Ctl.Args.FindVmcs.Addr;
+            UINT64 SearchSize = Ctl.Args.FindVmcs.Size;
+
+            // read basic VMX infomation register
+            UINT64 RevisionId = __readmsr(IA32_VMX_BASIC);
+
+            // extract 32 bits of VMCS revision ID value
+            RevisionId &= 0xffffffff;
+
+            // addess sanity check
+            if (SearchAddr % PAGE_SIZE != 0)
+            {
+                DbgMsg(__FILE__, __LINE__, "ERROR: Invalid memory address\r\n");
+
+                Ctl.Status = EFI_INVALID_PARAMETER;
+                break;
+            }
+
+            // size sanity check
+            if (SearchSize % PAGE_SIZE != 0 || SearchSize < PAGE_SIZE)
+            {
+                DbgMsg(__FILE__, __LINE__, "ERROR: Invalid memory size\r\n");
+
+                Ctl.Status = EFI_INVALID_PARAMETER;
+                break;
+            }
+
+            // get GDT address
+            Ctl.Status = SmmCpu->ReadSaveState(
+                SmmCpu, sizeof(GdtBase), EFI_SMM_SAVE_STATE_REGISTER_GDTBASE,
+                CpuIndex, (VOID *)&GdtBase
+            );
+            if (EFI_ERROR(Ctl.Status))
+            {
+                DbgMsg(__FILE__, __LINE__, "ReadSaveState() ERROR 0x%x\r\n", Ctl.Status);
+                break;
+            }
+
+            // get IDT address
+            Ctl.Status = SmmCpu->ReadSaveState(
+                SmmCpu, sizeof(IdtBase), EFI_SMM_SAVE_STATE_REGISTER_IDTBASE,
+                CpuIndex, (VOID *)&IdtBase
+            );
+            if (EFI_ERROR(Ctl.Status))
+            {
+                DbgMsg(__FILE__, __LINE__, "ReadSaveState() ERROR 0x%x\r\n", Ctl.Status);
+                break;
+            }
+
+            Ctl.Args.FindVmcs.Found = 0;
+
+            // enumerate all of the memory pages of specified region
+            for (i = 0; i < SearchSize; i += PAGE_SIZE)
+            {
+                UINT64 PageAddr = SearchAddr + i;
+
+                // map physical memoy page at SMM virtual address
+                if (PHYS_MAP(PageAddr))
+                {
+                    UINT8 *TargetAddr = MAPPED_ADDR(PageAddr);
+
+                    // check for valid VMCS region
+                    if (*(UINT64 *)TargetAddr == RevisionId)
+                    {
+                        // scan VMCS region for known values
+                        if (VmcsSearchVal(TargetAddr, VMCS_SEARCH_SIZE, GdtBase) &&
+                            VmcsSearchVal(TargetAddr, VMCS_SEARCH_SIZE, IdtBase) &&
+                            VmcsSearchVal(TargetAddr, VMCS_SEARCH_SIZE, ControlRegs->Cr0))
+                        {
+                            // potential VMCS was found
+                            Ctl.Args.FindVmcs.Found = PageAddr;
+                        }
+                    }
+
+                    PHYS_REVERT();
+                }
+
+                if (Ctl.Args.FindVmcs.Found != 0)
+                {
+                    // return to the caller
+                    Ctl.Status = EFI_SUCCESS;
+                    break;
+                }
             }
 
             break;
