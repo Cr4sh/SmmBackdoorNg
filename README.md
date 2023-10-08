@@ -1,7 +1,7 @@
 
 # SMM Backdoor Next Gen
 
-## General Information
+## General information
 
 This version of System Management Mode backdoor for UEFI based platforms was heavily inspired by [my previous project](http://blog.cr4.sh/2015/07/building-reliable-smm-backdoor-for-uefi.html) (check [its GitHub repository](https://github.com/Cr4sh/SmmBackdoor)) but introducing few key changes in order to make it more up to date:
 
@@ -16,7 +16,7 @@ This version of System Management Mode backdoor for UEFI based platforms was hea
  * SMM backdoor also can be used to load [my Hyper-V backdoor](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python/payloads/DmaBackdoorHv) (which is also part of PCI Express DIY hacking toolkit) into the currently running hypervisor during RT phase and perform guest to host VM escape attacks. Test client program `smm_backdoor_hyper_v.py` is used for integration with Hyper-V backdoor and its deployment.
 
 
-## Backdoor Usage
+## Backdoor usage
 
 Project documentation is incomplete at this moment, but here's some command line examples.
 
@@ -168,7 +168,47 @@ C:\> whoami
 nt authority\system
 ```
 
-## Using Together With Hyper-V Backdoor
+## Deploying the backdoor using firmware flash image infection
+
+To infect platform firmware stored in the flash chip on the motherboard with SMM backdoor you will need some SPI flash programmer, I prefer to use cheap and widely available [FT2232H Mini Module](https://www.ftdichip.com/Support/Documents/DataSheets/Modules/DS_FT2232H_Mini_Module.pdf) from FTDI. Also, there's a [board called Tigrad](https://www.crowdsupply.com/securinghw/tigard) &minus; multi-protocol, multi-voltage tool for hardware hacking that can work as SPI flash programmer. In addition to the programmer you also will need the following tools:
+
+ * [UEFITool](https://github.com/LongSoft/UEFITool/releases/tag/0.28.0) utility to parse and edit UEFI flash images
+ * [Flashrom](https://github.com/flashrom/flashrom/releases/tag/v1.2) utility to work with SPI flash programmer
+ * SOIC8 [test clip](https://www.sparkfun.com/products/13153) or [probe hook](https://www.sparkfun.com/products/9741) clips kit to connect programmer to the flash chip without its de-soldering
+
+First of all, you have to disassemble the machine and locate SPI flash chip with platform firmware. Usually, it's [W25Q64](https://www.winbond.com/resource-files/w25q64fv%20revq%2006142016.pdf) or [W25Q128](https://www.winbond.com/resource-files/w25q128fv_revhh1_100913_website1.pdf) Windbond NOR flash in SOIC8 package. Then you have to connect the chip to the FT2232H Mini Module. It’s more convenient to use SOIC8 test clip than probe hook clips, but very often there’s not enough free space around the chip to place test clip. 
+
+In case if you happen to find WSON8 packaged chip on you board instead of usual SOIC8 &minus; you can either de-solder it or use some sort of DIY [spring-loaded pogo pin](https://mouser.com/c/?q=pogo pin) test probe like this one to tap its pads:
+
+<img src="https://raw.githubusercontent.com/Cr4sh/SmmBackdoorNg/master/docs/images/spi_probe.jpg" width="530">
+
+Flash chip must be connected to the channel A of FT2232 Mini Module by the following scheme:
+
+<img src="https://raw.githubusercontent.com/Cr4sh/SmmBackdoorNg/master/docs/images/spi_wiring.png" width="542">
+
+Now you can read flash chip contents using Flashrom:
+
+```
+> flashrom -p ft2232_spi:type=2232H,port=A –r firmware.bin
+```
+
+After that you need to open dumped firmware in UEFITool, locate arbitrary UEFI SMM driver to infect and extract its PE32 image section from the firmware image:
+
+<img src="https://raw.githubusercontent.com/Cr4sh/SmmBackdoorNg/master/docs/images/uefi_tool.png" width="710">
+
+For example, I picked `NvramSmm` UEFI SMM driver responsible for NVRAM access as pretty much suitable one. Then you can infect extracted driver with SMM backdoor using `--infect` command line option of `smm_backkdoor.py` program:
+
+```
+> python2 smm_backkdoor.py --infect NvramSmm.bin --output NvramSmm_infected.bin --payload SmmBackdoorNg_X64.efi
+```
+
+After that you have to replace original driver image with `NvramSmm_infected.bin` one in UEFITool, save resulting firmware image and flash it back into the chip:
+
+```
+> flashrom -p ft2232_spi:type=2232H,port=A –w firmware_infected.bin
+```
+
+## Using together with Hyper-V Backdoor
 
 Once you have SMM backdoor loaded, as it shown above, you can use its capabilities to load Hyper-V backdoor during runtime phase with appropriate client program running inside arbitrary guest or host Hyper-V partition. 
 
