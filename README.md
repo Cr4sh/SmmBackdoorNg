@@ -1,6 +1,11 @@
 
 # SMM Backdoor Next Gen
 
+[General information](#general-information)  
+[Backdoor usage](#backdoor-usage)  
+[Deploying the backdoor using firmware flash image infection](#deploying-the-backdoor-using-firmware-flash-image-infection)  
+[Using together with Hyper-V Backdoor](#using-together-with-hyper-v-backdoor)  
+
 ## General information
 
 This version of System Management Mode backdoor for UEFI based platforms was heavily inspired by [my previous project](http://blog.cr4.sh/2015/07/building-reliable-smm-backdoor-for-uefi.html) (check [its GitHub repository](https://github.com/Cr4sh/SmmBackdoor)) but introducing few key changes in order to make it more up to date:
@@ -194,7 +199,7 @@ Now you can read flash chip contents using Flashrom:
 
 After that you need to open dumped firmware in UEFITool, locate arbitrary UEFI SMM driver to infect and extract its PE32 image section from the firmware image:
 
-<img src="https://raw.githubusercontent.com/Cr4sh/SmmBackdoorNg/master/docs/images/uefi_tool.png" width="710">
+<img src="https://raw.githubusercontent.com/Cr4sh/SmmBackdoorNg/master/docs/images/uefi_tool.png" width="701">
 
 For example, I picked `NvramSmm` UEFI SMM driver responsible for NVRAM access as pretty much suitable one. Then you can infect extracted driver with SMM backdoor using `--infect` command line option of `smm_backkdoor.py` program:
 
