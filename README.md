@@ -202,7 +202,7 @@ PS C:\> python2 smm_backdoor_hyper_v.py
 
 In case when `smm_backdoor_hyper_v.py` is unable to locate target VMCS region &minus; you can override its default scanning options by specifying appropriate values in `--scan-from`, `--scan-to` and `--scan-step` command line arguments of the program. Since VMCS region location stage might take a while, you also can use `--verbose` option of the program to display operation progress information.
 
-After successful Hyper-V backdoor load you can run its client program to ensure that backdoor is up and responding:
+After successful Hyper-V backdoor load you can run [its client program](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python/payloads/DmaBackdoorHv/backdoor_client/backdoor_client) to ensure that backdoor is up and responding:
 
 ```
 PS C:\> .\hyper_v_backdoor_client.exe 0
