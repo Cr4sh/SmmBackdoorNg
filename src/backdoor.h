@@ -33,5 +33,6 @@ typedef struct _INFECTOR_STATUS
 #pragma pack()
 
 void ConsolePrint(char *Message);
+VOID GenerateSoftwareSMI(UINT8 Data, UINT8 Command);
 
 #endif

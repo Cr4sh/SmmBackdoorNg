@@ -1569,18 +1569,18 @@ VOID BackdoorSmmCall(EFI_SMM_SYSTEM_TABLE2 *Smst)
     }
 }
 //--------------------------------------------------------------------------------------
-#ifdef USE_PERIODIC_TIMER
-
-// original address of hooked functions
-EFI_GET_NEXT_VARIABLE_NAME old_GetNextVariableName = NULL;
-EFI_SET_VIRTUAL_ADDRESS_MAP old_SetVirtualAddressMap = NULL;
-
 VOID GenerateSoftwareSMI(UINT8 Data, UINT8 Command)
 {
     // fire software SMI using APMC
     __outbyte(APMC_DATA, Data);
     __outbyte(APMC_COMMAND, Command);
 }
+
+#ifdef USE_PERIODIC_TIMER
+
+// original address of hooked functions
+EFI_GET_NEXT_VARIABLE_NAME old_GetNextVariableName = NULL;
+EFI_SET_VIRTUAL_ADDRESS_MAP old_SetVirtualAddressMap = NULL;
 
 VOID EnablePeriodicTimer(VOID)
 {
