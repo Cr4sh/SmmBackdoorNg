@@ -158,8 +158,10 @@ void ConsoleInitialize(void)
     {
         EFI_GUID VariableGuid = BACKDOOR_VAR_GUID;
 
-        m_OutputBuffer = (char *)PagesAddr;        
+        m_OutputBuffer = (char *)PagesAddr;
         m_BS->SetMem(m_OutputBuffer, DEBUG_OUTPUT_SIZE, 0);
+
+        DbgMsg(__FILE__, __LINE__, "Debug output buffer is at "FPTR"\r\n", PagesAddr);
 
         // save memory address into the firmware variable
         Status = m_ST->RuntimeServices->SetVariable(
@@ -400,8 +402,6 @@ EFI_STATUS PeriodicTimerDispatch2Unregister(EFI_HANDLE DispatchHandle)
 #define SAVE_SATE_REG_RCX       (0x7f64 - SAVE_SATE_START)
 #define SAVE_SATE_REG_RDI       (0x7f94 - SAVE_SATE_START)
 #define SAVE_SATE_REG_RSI       (0x7f8C - SAVE_SATE_START)
-#define SAVE_SATE_REG_R8        (0x7f54 - SAVE_SATE_START)
-#define SAVE_SATE_REG_R9        (0x7f4c - SAVE_SATE_START)
 #define SAVE_SATE_REG_CR0       (0x7ff8 - SAVE_SATE_START)
 #define SAVE_SATE_REG_CR3       (0x7ff0 - SAVE_SATE_START)
 
