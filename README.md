@@ -5,6 +5,7 @@
 [Backdoor usage](#backdoor-usage)  
 [Deploying the backdoor using firmware flash image infection](#deploying-the-backdoor-using-firmware-flash-image-infection)  
 [Using together with Hyper-V Backdoor](#using-together-with-hyper-v-backdoor)  
+[Building from the source code](#building-from-the-source-code)  
 
 ## General information
 
@@ -270,6 +271,27 @@ PS C:\> .\hyper_v_backdoor_client.exe 0
 ```
 
 For more information about Hyper-V backdoor client program and performing guest to host VM escape attacks on Windows targets you can [check usage examples](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python/payloads/DmaBackdoorHv#vm-escape-related-commands) in Hyper-V backdoor documentation. 
+
+
+## Building from the source code
+
+To compile SMM backdoor UEFI driver `SmmBackdoorNg_X64.efi` you need to have a Windows machine with [Visual Studio](https://visualstudio.microsoft.com/downloads/) and [EDK2 source code](https://github.com/tianocore/edk2) installed.
+
+To build project from the source code you need to perform the following steps:
+
+  1. Install Visual Studio and EDK2 [following its setup instructions](https://github.com/tianocore/tianocore.github.io/wiki/Common-instructions).
+
+  2. Copy `SmmBackdoorNg` project directory into the EDK2 source code directory.
+
+  3. Edit `Conf/target.txt` file of EDK2, set `ACTIVE_PLATFORM` value to `OvmfPkg/OvmfPkgX64.dsc` and `TOOL_CHAIN_TAG` in according to your installed version of Visual Studio.
+
+  4. Edit `OvmfPkg/OvmfPkgX64.dsc` file of EDK2 and add `SmmBackdoorNg/SmmBackdoorNg.inf` line at its end.
+
+  5. Open Visual Studio command prompt and change current directory to `SmmBackdoorNg` in EDK2 directory.
+
+  6. Execute `build` command to compile SMM backdoor UEFI driver.
+
+  7. Resulting image file will be created in appropriate sub-directory of `Build/OvmfX64/` EDK2 directory depending on build target and used Visual Studio version.
 
 
 ## About
