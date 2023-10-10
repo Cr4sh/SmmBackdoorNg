@@ -26,7 +26,7 @@ This version of System Management Mode backdoor for UEFI based platforms was hea
 
 Project documentation is incomplete at this moment, but here's some command line examples.
 
-Deploying SMM backdoor UEFI driver with PCI Express DIY hacking toolkit using pre-boot DMA attack, DXE to SMM execution transition exploit mentioned above will be started automatically once backdoor driver will be loaded:
+Deploying SMM backdoor UEFI driver with PCI Express DIY hacking toolkit using [pre-boot DMA attack](https://github.com/Cr4sh/s6_pcie_microblaze#practical-dma-attacks), DXE to SMM execution transition exploit mentioned above will be started automatically once backdoor driver will be loaded:
 
 ```
 # python2 uefi_backdoor_simple.py --driver SmmBackdoorNg_X64.efi
@@ -275,23 +275,23 @@ For more information about Hyper-V backdoor client program and performing guest 
 
 ## Building from the source code
 
-To compile SMM backdoor UEFI driver `SmmBackdoorNg_X64.efi` you need to have a Windows machine with [Visual Studio](https://visualstudio.microsoft.com/downloads/) and [EDK2 source code](https://github.com/tianocore/edk2) installed.
+To compile SMM backdoor UEFI driver `SmmBackdoorNg_X64.efi` you need to have a Windows machine with [Visual Studio](https://visualstudio.microsoft.com/downloads/) and [EDK II source code](https://github.com/tianocore/edk2) installed.
 
 To build project from the source code you need to perform the following steps:
 
-  1. Install Visual Studio and EDK2 [following its setup instructions](https://github.com/tianocore/tianocore.github.io/wiki/Common-instructions).
+  1. Install Visual Studio and EDK II [following its setup instructions](https://github.com/tianocore/tianocore.github.io/wiki/Common-instructions).
 
-  2. Copy `SmmBackdoorNg` project directory into the EDK2 source code directory.
+  2. Copy `SmmBackdoorNg` project directory into the EDK source code directory.
 
-  3. Edit `Conf/target.txt` file of EDK2, set `ACTIVE_PLATFORM` value to `OvmfPkg/OvmfPkgX64.dsc` and `TOOL_CHAIN_TAG` in according to your installed version of Visual Studio.
+  3. Edit `Conf/target.txt` file of EDK, set `ACTIVE_PLATFORM` value to `OvmfPkg/OvmfPkgX64.dsc` and `TOOL_CHAIN_TAG` in according to your installed version of Visual Studio.
 
-  4. Edit `OvmfPkg/OvmfPkgX64.dsc` file of EDK2 and add `SmmBackdoorNg/SmmBackdoorNg.inf` line at its end.
+  4. Edit `OvmfPkg/OvmfPkgX64.dsc` file of EDK and add `SmmBackdoorNg/SmmBackdoorNg.inf` line at its end.
 
-  5. Open Visual Studio command prompt and change current directory to `SmmBackdoorNg` in EDK2 directory.
+  5. Open Visual Studio command prompt and change current directory to previously copied `SmmBackdoorNg` directory.
 
   6. Execute `build` command to compile SMM backdoor UEFI driver.
 
-  7. Resulting image file will be created in appropriate sub-directory of `Build/OvmfX64/` EDK2 directory depending on build target and used Visual Studio version.
+  7. Resulting image file will be created in appropriate sub-directory of `Build/OvmfX64/` EDK directory depending on used build target and Visual Studio version.
 
 
 ## About
