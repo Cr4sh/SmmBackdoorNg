@@ -55,7 +55,7 @@ Hooking LocateProtocol(): 0x7a3987b4 -> 0x000c20fc
 
 In case if you're going to deploy SMM backdoor with PCI Express DIY hacking toolkit &minus; I would recommend to get used [Xilinx ZC706](https://www.xilinx.com/products/boards-and-kits/ek-z7-zc706-g.html) from e-Bay rather than [older SP605](https://www.xilinx.com/products/boards-and-kits/ek-s6-sp605-g.html) evaluation kit, since this board has [better design](https://github.com/Cr4sh/zc_pcie_dma), can perform DMA attacks faster and its [development tools](https://www.xilinx.com/products/design-tools/vivado.html) are more suitable for modern day use.
 
-To deploy SMM backdoor you also can use my [Pico DMA project](https://github.com/Cr4sh/pico_dma) &minus; fully autonomous pre-boot DMA attack hardware implant for M.2 slot based on PicoEVB development board that can run arbitrary UEFI DXE drivers payload.
+To deploy SMM backdoor you also can use my [Pico DMA project](https://github.com/Cr4sh/pico_dma) &minus; fully autonomous pre-boot DMA attack hardware implant for M.2 slot based on PicoEVB development board that can run arbitrary UEFI DXE drivers as payload.
 
 In addition, you also can deploy the backdoor using [firmware flash image infection](#deploying-the-backdoor-using-firmware-flash-image-infection) described below in the next section.
 
