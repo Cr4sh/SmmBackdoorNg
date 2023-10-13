@@ -2,6 +2,7 @@
 # SMM Backdoor Next Gen
 
 [General information](#general-information)  
+[Contents](#contents)  
 [Backdoor usage](#backdoor-usage)  
 [Deploying the backdoor using firmware flash image infection](#deploying-the-backdoor-using-firmware-flash-image-infection)  
 [Using together with Hyper-V Backdoor](#using-together-with-hyper-v-backdoor)  
@@ -20,6 +21,31 @@ This version of System Management Mode backdoor for UEFI based platforms was hea
  * SMM backdoor is fully virtualization-aware now, its library and client programs can work as expected inside Windows or Linux virtual machines running on the infected host system.
 
  * SMM backdoor also can be used to load [my Hyper-V backdoor](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python/payloads/DmaBackdoorHv) (which is also part of PCI Express DIY hacking toolkit) into the currently running hypervisor during RT phase and perform guest to host VM escape attacks. Test client program `smm_backdoor_hyper_v.py` is used for integration with Hyper-V backdoor and its deployment.
+
+
+## Contents
+
+The project consists from the following files and directories:
+
+ * `src/` &minus; Source code directory of UEFI DXE driver that implements SMM backdoor functionality along with software part of the exploit.
+
+ * `config.h` &minus; C header file with backdoor UEFI driver project configuration.
+
+ * `interface.h` &minus; C header file with SMM backdoor program interface definitions.
+
+ * `SmmBackdoorNg.inf` &minus; EDK II project configuration file for backdoor UEFI driver.
+
+ * `SmmBackdoorNg_X64.efi` &minus; Compiled binary of backdoor UEFI driver.
+
+ * `SmmBackdoorNg_X64.pdb` &minus; Debug symbols for the binary.
+
+ * `smm_backdoor.py` &minus; Backdoor client program, also used to infect PE images of UEFI SMM drivers.
+
+ * `smm_backdoor_privesc_linux.py` &minus; Backdoor client program with Linux local privileges escalation demo.
+
+ * `smm_backdoor_privesc_windows.py` &minus; Backdoor client program with Windows local privileges escalation demo.
+
+ * `smm_backdoor_hyper_v.py` &minus; Backdoor client program used for Hyper-V backdoor deployment.
 
 
 ## Backdoor usage
